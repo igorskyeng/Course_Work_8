@@ -1,18 +1,20 @@
 from rest_framework import serializers
 
-from materials.models import Lesson, Course
+from materials.models import Lesson, Course, Subscription
+from materials.validators import URLValidator
 
 
 class LessonSerializers(serializers.ModelSerializer):
-
     class Meta:
         model = Lesson
         fields = '__all__'
+        validators = [URLValidator(field='link_to_the_video')]
 
 
 class CourseSerializers(serializers.ModelSerializer):
     number_of_lessons = serializers.SerializerMethodField()
     lessons = LessonSerializers(source='lesson_set', many=True, read_only=True)
+    subscription = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -21,3 +23,13 @@ class CourseSerializers(serializers.ModelSerializer):
     @staticmethod
     def get_number_of_lessons(instance):
         return instance.lesson_set.all().count()
+
+    def get_subscription(self, instance):
+        user = self.context['request'].user
+        return Subscription.objects.all().filter(user=user).filter(course=instance).exists()
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = '__all__'

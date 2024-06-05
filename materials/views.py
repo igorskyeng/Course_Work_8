@@ -11,12 +11,14 @@ from django.forms import inlineformset_factory
 
 from pytils.translit import slugify
 from rest_framework import viewsets, generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from materials.models import Course, Lesson
+from materials.models import Course, Lesson, Subscription
 from materials.paginators import LessonPaginator
 from materials.permissions import IsModerator, IsOwner
-from materials.serliazers import CourseSerializers, LessonSerializers
+from materials.serliazers import CourseSerializers, LessonSerializers, SubscriptionSerializer
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -30,7 +32,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'create':
-            self.permission_classes = [IsAuthenticated | IsModerator]
+            self.permission_classes = [AllowAny]
 
         elif self.action in ['retrieve', 'update', 'list']:
             self.permission_classes = [IsAuthenticated | IsModerator | IsOwner]
@@ -82,3 +84,23 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
     serializer_class = LessonSerializers
     queryset = Lesson.objects.all()
     permission_classes = [IsAuthenticated | IsOwner]
+
+
+class SubscriptionAPIView(APIView):
+    serializer_class = SubscriptionSerializer
+
+    def post(self, *args, **kwargs):
+        user = self.request.user
+        course_id = self.request.data.get('course')
+        course = get_object_or_404(Course, pk=course_id)
+        subs_item = Subscription.objects.all().filter(user=user).filter(course=course)
+
+        if subs_item.exists():
+            subs_item.delete()
+            message = 'Подписка отключена'
+
+        else:
+            Subscription.objects.create(user=user, course=course)
+            message = 'Подписка включена'
+
+        return Response({"message": message})
