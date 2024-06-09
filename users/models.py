@@ -33,12 +33,14 @@ class Payments(models.Model):
         CASH = "Наличные", "Наличные"
         TRANSFER = "Перевод", "Перевод"
 
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, verbose_name='Пользватель', null=True)
-    payment_date = models.DateTimeField(verbose_name='Дата оплаты')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользватель', **NULLABLE)
+    payment_date = models.DateTimeField(verbose_name='Дата оплаты', default=datetime.now())
     paid_course = models.ForeignKey(Course, verbose_name='Название курса', on_delete=models.CASCADE)
     payment_amount = models.IntegerField(verbose_name='Сумма оплаты')
     payment_method = models.CharField(max_length=50, default=PaymentMethod.CASH,
                                       choices=PaymentMethod, verbose_name='Метод оплаты')
+    payment_link = models.URLField(max_length=400, verbose_name='Ссылка на оплату', **NULLABLE)
+    payment_id = models.CharField(max_length=255, verbose_name='ID платежа', **NULLABLE)
 
     def __str__(self):
         return str(self.paid_course)

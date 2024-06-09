@@ -50,7 +50,7 @@
     "is_superuser": false,
     "first_name": "╨Ш╨│╨╛╤А╤М",
     "last_name": "╨Р╨╜╨░╤В╨╛╨╗╤М╨╡╨▓╨╕╤З",
-    "is_staff": true,
+    "is_staff": false,
     "is_active": true,
     "date_joined": "2024-05-21T08:26:05Z",
     "email": "Igorbarbur@yandex.ru",

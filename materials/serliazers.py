@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from materials.services import convert_currencies
 from materials.models import Lesson, Course, Subscription
 from materials.validators import URLValidator
 
@@ -15,6 +16,7 @@ class CourseSerializers(serializers.ModelSerializer):
     number_of_lessons = serializers.SerializerMethodField()
     lessons = LessonSerializers(source='lesson_set', many=True, read_only=True)
     subscription = serializers.SerializerMethodField()
+    usd_price = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -27,6 +29,9 @@ class CourseSerializers(serializers.ModelSerializer):
     def get_subscription(self, instance):
         user = self.context['request'].user
         return Subscription.objects.all().filter(user=user).filter(course=instance).exists()
+
+    def get_usd_price(self, instance):
+        return convert_currencies(instance.amount)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):

@@ -5,10 +5,12 @@ from rest_framework import generics
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.serializers import ValidationError
 
 from users.models import User, Payments
 
 from users.serliazers import PaymentsSerializers, UserSerializers
+from users.services import create_stripe_session
 
 
 class UserCreateAPIView(generics.CreateAPIView):
@@ -46,6 +48,18 @@ class UserDestroyAPIView(generics.DestroyAPIView):
 
 class PaymentsCreateAPIView(generics.CreateAPIView):
     serializer_class = PaymentsSerializers
+    queryset = Payments.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        payment = serializer.save()
+        payment.user = self.request.user
+
+        if payment.payment_method == "Перевод":
+            payment.payment_id = create_stripe_session(payment).id
+            payment.payment_link = create_stripe_session(payment).url
+
+        payment.save()
 
 
 class PaymentsListAPIView(generics.ListAPIView):
