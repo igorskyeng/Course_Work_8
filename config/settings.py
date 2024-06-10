@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django_filters',
     'drf_yasg',
     'corsheaders',
+    'django_celery_beat',
 
     'users',
     'materials',
@@ -193,3 +194,6 @@ CUR_API_URL = os.getenv('CUR_API_URL')
 CUR_API_KEY = os.getenv('CUR_API_KEY')
 
 SKRIPE_KEY = os.getenv('SKRIPE_KEY')
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"

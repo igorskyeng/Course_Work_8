@@ -1,17 +1,7 @@
-import random
+from django.shortcuts import get_object_or_404
 
-from django.conf import settings
-from django.core.cache import cache
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.views.generic.base import TemplateView
-from django.urls import reverse_lazy, reverse
-from django.forms import inlineformset_factory
-
-from pytils.translit import slugify
 from rest_framework import viewsets, generics
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -19,6 +9,7 @@ from materials.models import Course, Lesson, Subscription
 from materials.paginators import LessonPaginator
 from materials.permissions import IsModerator, IsOwner
 from materials.serliazers import CourseSerializers, LessonSerializers, SubscriptionSerializer
+from materials.tasks import send_email
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -47,6 +38,12 @@ class CourseViewSet(viewsets.ModelViewSet):
 
         elif self.request.user.is_staff:
             return Course.objects.all()
+
+    def update(self, request, pk):
+        course = get_object_or_404(Course, pk=pk)
+        send_email.delay(course_id=course.id)
+
+        return super().update(request)
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
